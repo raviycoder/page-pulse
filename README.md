@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Page Pulse
 
-## Getting Started
+A lightweight URL auditing tool built for the Digital Heroes Training Task.
 
-First, run the development server:
+## Live Demo
+https://your-deployed-url.vercel.app
 
-```bash
+## Features
+- HTTP status and response time
+- Page title and meta description extraction
+- H1 heading count
+- Images missing alt text
+- Approximate word count
+- Friendly handling of invalid URLs, timeouts, and non-HTML responses
+
+## Tech Stack
+Next.js, TypeScript, Tailwind CSS, Cheerio, Vitest
+
+## Setup
+\`\`\`bash
+git clone https://github.com/your-username/page-pulse.git
+cd page-pulse
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run tests
+\`\`\`bash
+npm test
+\`\`\`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Contract
 
-## Learn More
+### POST /api/audit
 
-To learn more about Next.js, take a look at the following resources:
+Request body:
+\`\`\`json
+{ "url": "https://example.com" }
+\`\`\`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Success response:
+\`\`\`json
+{
+  "success": true,
+  "data": {
+    "url": "https://example.com",
+    "statusCode": 200,
+    "responseTimeMs": 245,
+    "title": "Example Domain",
+    "metaDescription": "",
+    "h1Count": 1,
+    "imagesMissingAlt": 0,
+    "wordCount": 22
+  }
+}
+\`\`\`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Error response:
+\`\`\`json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_URL",
+    "message": "Please provide a valid URL, e.g. https://example.com."
+  }
+}
+\`\`\`
 
-## Deploy on Vercel
+## Design Decisions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Next.js full-stack architecture** — Using API routes inside the same
+   Next.js app avoids running and deploying a separate backend, which keeps
+   the project simple and free-tier friendly.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Cheerio instead of a headless browser** — Cheerio parses static HTML
+   quickly and works well within serverless function limits. The trade-off
+   is that JavaScript-rendered content won't be captured, which is
+   acceptable for a lightweight audit tool.
+
+3. **AbortController with an 8-second timeout and structured error codes**
+   — Prevents requests from hanging indefinitely and lets the frontend show
+   specific, useful messages (invalid URL, timeout, non-HTML) instead of a
+   generic crash or infinite loading state.
